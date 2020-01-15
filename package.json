@@ -11,7 +11,7 @@
   "scripts": {
     "build": "tsc --module commonjs --skipLibCheck && rollup -c rollup.config.ts",
     "dev": "rollup -c rollup.config.ts -w",
-    "docs": "typedoc --out dist/docs --target es6 --theme default --mode modules --excludeExternals --skipLibCheck src && node ./tools/generate-docs.js",
+    "docs": "node ./tools/generate-docs.js",
     "lint": "npx eslint 'src/**/*.ts' '__tests__/**/*.ts'",
     "prebuild": "rimraf dist",
     "prepublish": "npm run build",
@@ -82,9 +82,6 @@
     "shins": "^2.3.2-5",
     "ts-jest": "^24.1.0",
     "ts-node": "^7.0.1",
-    "typedoc": "^0.15.0",
-    "typedoc-plugin-external-module-name": "^2.1.0",
-    "typedoc-plugin-sourcefile-url": "^1.0.4",
     "typescript": "^3.6.3",
     "validate-commit-msg": "^2.14.0",
     "widdershins": "^3.6.7"
