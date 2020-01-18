@@ -1,0 +1,6 @@
+paths:
+  $include: 'paths/testing.yml'
+
+  $include: 'paths/state.yml'
+
+  $include: 'paths/accumulate.yml'

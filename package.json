@@ -11,7 +11,7 @@
   "scripts": {
     "build": "tsc --module commonjs --skipLibCheck && rollup -c rollup.config.ts",
     "dev": "rollup -c rollup.config.ts -w",
-    "docs": "node ./tools/generate-docs.js",
+    "docs": "yamlinc -o docs/api.yml docs/index.yml && node ./tools/generate-docs.js",
     "lint": "npx eslint 'src/**/*.ts' '__tests__/**/*.ts'",
     "prebuild": "rimraf dist",
     "prepublish": "npm run build",
@@ -84,7 +84,8 @@
     "ts-node": "^7.0.1",
     "typescript": "^3.6.3",
     "validate-commit-msg": "^2.14.0",
-    "widdershins": "^3.6.7"
+    "widdershins": "^3.6.7",
+    "yamlinc": "^0.1.10"
   },
   "dependencies": {
     "eslint-config-prettier": "^6.3.0",

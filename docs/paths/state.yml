@@ -1,0 +1,395 @@
+  ## State
+  /all_state:
+    get:
+      tags:
+        - Extension State
+      security:
+        - viewerJWT: []
+
+      summary: Get All State
+      description:
+        Returns a single JSON object with fields for the current
+        viewer/channel combination.
+      responses:
+        "200":
+          description: All types of state for the current viewer.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  extension:
+                    type: object
+                    description: State for all viewers and channels for this extension.
+                  channel:
+                    type: object
+                    description: State for all viewers on this channel.
+                  viewer:
+                    type: object
+                    description: State for this viewer on this channel.
+                  extension_viewer:
+                    type: object
+                    description: State for this viewer on any channel using this extension.
+                example:
+                  extension: { "extension_name": "Awesome Extension" }
+                  channel: { "channel_color": "royalpurple" }
+                  viewer: { "last_broadcaster_request": "sing a song" }
+                  extension_viewer: { "accumulated_points": 123456 }
+
+      x-code-samples:
+        - lang: JavaScript
+          source: |
+            sdk.getAllState().then((state) => {
+              if (state.channel.broadcasters_mood) {
+                console.log(`Broadcaster set their mood as: ${state.channel.broadcasters_mood}`);
+              }
+              if (state.viewer.favorite_movie) {
+                console.log(`But your favorite movie is: ${state.viewer.favorite_movie}`);
+              }
+            });
+
+  /extension_state:
+    get:
+      tags:
+        - Extension State
+      security:
+        - viewerJWT: []
+
+      summary: Get Extension State
+      description:
+        Returns a JSON object of the extension's state. This is global for all
+        viewers on all channels.
+      responses:
+        "200":
+          description: The extension's state.
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Any JSON serializable data
+
+      x-code-samples:
+        - lang: JavaScript
+          source: |
+            sdk.getExtensionState().then((state) => {});
+
+    post:
+      tags:
+        - Extension State
+      security:
+        - adminJWT: []
+
+      summary: Set Extension State
+      description: Sets the extension's state. This is global for all viewers on all channels.
+      responses:
+        "200":
+          description: Extension state updated
+        "400":
+          description: JSON data was not able to be parsed
+
+    x-code-samples:
+        - lang: JavaScript
+          source: |
+            sdk.setExtensionState({
+              favorite_movie: 'Jaws: The Revenge'
+            }).then(() => {
+              console.log('Extension state saved!');
+            }).catch((err) => {
+              console.error(`Failed saving viewer state: ${err}`);
+            });
+
+  /channel_state:
+    get:
+      tags:
+        - Extension State
+      security:
+        - viewerJWT: []
+
+      summary: Get Channel State
+      description:
+        Returns a JSON object of the channels's state. This is the same for all
+        viewers on the current channel.
+      responses:
+        "200":
+          description: The channel's state.
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Any JSON serializable data
+
+      x-code-samples:
+        - lang: JavaScript
+          source: |
+            sdk.getChannelState().then((state) => {});
+
+
+    post:
+      tags:
+        - Extension State
+      security:
+        - broadcasterJWT: []
+
+      summary: Set Channel State
+      description:
+        Sets the channel's state. This is the same for all viewers on
+        the current channel.
+      responses:
+        "200":
+          description: Channel state updated
+        "400":
+          description: JSON data was not able to be parsed
+
+      x-code-samples:
+        - lang: JavaScript
+          source: |
+            sdk.setChannelState({
+              broadcasters_mood: 'sanguine, my brother',
+              chats_mood: 'kreygasm'
+            }).then(() => {
+              // Let viewers know that new channel state is available.
+            }).catch((err) => {
+              console.error(`Failed saving channel state: ${err}`);
+            });
+
+
+  /viewer_state:
+    get:
+      tags:
+        - Extension State
+      security:
+        - viewerJWT: []
+
+      summary: Get Viewer State
+      description: Returns a JSON object of the viewer state for the current
+        channel set by the extension.
+      responses:
+        "200":
+          description: The viewer's extension state.
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Any JSON serializable data
+
+      x-code-samples:
+        - lang: JavaScript
+          source: |
+            sdk.getViewerState().then((state) => {});
+
+    post:
+      tags:
+        - Extension State
+      security:
+        - viewerJWT: []
+
+      summary: Set Viewer State
+      description: Sets the viewer state for the extension/channel combination.
+      responses:
+        "200":
+          description: Viewer state updated
+        "400":
+          description: JSON data was not able to be parsed
+
+      x-code-samples:
+        - lang: JavaScript
+          source: |
+            sdk.setViewerState({
+              favorite_movie: 'Jaws: The Revenge'
+            }).then(() => {
+              console.log('Viewer state saved!');
+            }).catch((err) => {
+              console.error(`Failed saving viewer state: ${err}`);
+            });
+
+  /extension_viewer_state:
+    get:
+      tags:
+        - Admin Extension State
+      security:
+        - viewerJWT: []
+        - adminJWT: []
+
+      summary: Get Extension-wide Viewer State
+      description: |
+        If the request includes a query parameter list of Twitch user IDs and the
+        requesting JWT auth token is admin-level, returns a mapping of those user
+        IDs to their extension-side viewer state, removing any that are not found.
+
+        If no list of IDs is provided and the JWT auth token is viewer-level,
+        returns a JSON object of the viewer's extension-wide state. This is
+        associated with the current viewer, but across all channels.
+
+      parameters:
+        - in: query
+          name: user_ids
+          required: false
+          style: form
+          schema:
+            type: array
+            description:
+              Optional comma-separated list of Twitch user IDs.
+
+      responses:
+        "200":
+          description:
+            One or more viewer state objects depending on request.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    required:
+                      - user_ids
+                    description: Any JSON serializable data
+                    example:
+                      { "hello": "world" }
+                  - type: object
+                    description: A mapping of user IDs to viewer extension state
+                discriminator:
+                  propertyName: user_ids
+
+      x-code-samples:
+        - lang: JavaScript
+          label: JavaScript (Viewer)
+          source: |
+            sdk.getExtensionViewerState().then((state) => {});
+        - lang: JavaScript
+          label: JavaScript (Admin)
+          source: |
+            sdk.multiGetExtensionViewerState(["valid-viewer-id", "invalid-viewer-id"]).then((viewers) => {
+              console.log(users["valid-viewer-id"]) // Prints that viewer's extension state
+              console.log(users["valid-viewer-id"]) // Prints "undefined"
+            });
+
+    post:
+      tags:
+        - Admin Extension State
+      security:
+        - adminJWT: []
+
+      summary: Set Extension-wide Viewer State
+      description:
+        Sets the viewer state for the entire extension. This is associated with
+        the current viewer, but across all channels.
+      responses:
+        "200":
+          description: Viewer state updated
+        "400":
+          description: JSON data was not able to be parsed
+
+      x-code-samples:
+        - lang: JavaScript
+          source: |
+            sdk.setExtensionViewerState({
+              favorite_movie: 'Jaws: The Revenge'
+            }).then(() => {
+              console.log('Viewer state saved!');
+            }).catch((err) => {
+              console.error(`Failed saving viewer state: ${err}`);
+            });
+
+    patch:
+      tags:
+        - Admin Extension State
+      security:
+        - adminJWT: []
+
+      summary: Set Extension-wide Viewer State for Multiple Viewers
+      description: |
+        Allows an admin-level user to set extension-wide viewer state for
+        multiple viewers in a single request.
+
+        Limited to updating 1000 viewers per-call.
+
+      requestBody:
+        description:
+          A JSON object containing a mapping of viewer IDs to patch objects. The viewer
+          ID may either be the opaque or Twitch ID of the viewer. The patch object may
+          be an array of JSONPatch (http://jsonpatch.com/) operations, or a simple JSON
+          object that will be merged with the existing state.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                <viewer id>:
+                  description: An array of JSONPatch operations or a new state object.
+                  oneOf:
+                  - type: array
+                  - type: object
+            example:
+              12345: [
+                { "op": "replace", "path": "/baz", "value": "boo" },
+                { "op": "add", "path": "/hello", "value": ["world"] },
+                { "op": "remove", "path": "/foo" }
+              ]
+              67890: {
+                "baz": "boo",
+                "hello": ["world"]
+              }
+
+      responses:
+        "200":
+          description: State for all viewers updated
+        "400":
+          description: State updates were unparsable for one or more viewers
+
+      x-code-samples:
+        - lang: JavaScript
+          source: |
+            sdk.patchExtensionViewerState({
+              "12452": { "hello": "world" },
+              "12422": { "foo": "bar" }
+            });
+
+  /extension_hidden_state:
+    get:
+      tags:
+        - Admin Extension State
+      security:
+        - adminJWT: []
+
+      summary: Get Secret Extension State
+      description:
+        Returns a JSON object of the secret extension state. This is only reachable by
+        an admin or backend signed JWT.
+      responses:
+        "200":
+          description: The secret extension state.
+          content:
+            application/json:
+              schema:
+                type: object
+                description: Any JSON serializable data
+
+      x-code-samples:
+        - lang: JavaScript
+          source: |
+            sdk.getExtensionSecretState().then((state) => {});
+
+    post:
+      tags:
+        - Admin Extension State
+      security:
+        - adminJWT: []
+
+      summary: Set Secret Extension State
+      description: Sets the secret extension state.
+      responses:
+        "200":
+          description: Secret state updated
+        "400":
+          description: JSON data was not able to be parsed
+
+      x-code-samples:
+        - lang: JavaScript
+          source: |
+            sdk.setExtensionSecretState({
+              favorite_movie: 'Twilight: New Moon'
+            }).then(() => {
+              console.log('Extension secrets saved!');
+            }).catch((err) => {
+              console.error(`Failed saving secret state: ${err}`);
+            });

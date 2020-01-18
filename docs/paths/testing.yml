@@ -1,0 +1,60 @@
+  ## Testing
+  /authtoken:
+    post:
+      tags:
+        - Testing
+      summary: Get Testing Auth Token
+      description:
+        Creates one or more authentication tokens, suitable for testing. This endpoint is
+        only available on the Sandbox Development server.
+
+      requestBody:
+        description: Testing values describing the simulated Twitch environment.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                extension_id:
+                  description: The Extension Client ID provided by Twitch
+                  type: string
+                channel_id:
+                  description: The Twitch Channel ID the extension is installed and activated one
+                  type: string
+                role:
+                  description: The access level of the extension user. One of ('viewer', 'broadcaster', 'admin')
+                  type: string
+                user_id:
+                  description: The Twitch User ID of the user of the extension. May be the same as the Channel ID
+                  type: string
+                user_ids:
+                  description:
+                    One or more Twitch User IDs. If provided, the response will contain an array of
+                    tokens, one for each User ID provided.
+                  type: string
+            example:
+              extension_id: iu4qc791nxpovyd3m49zskfymab8gp
+              channel_id: 126955211
+              user_id: 126955211
+              role: viewer
+
+      responses:
+        "200":
+          description: One or more valid testing JWTs.
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - type: object
+                    properties:
+                      token:
+                        type: string
+                  - type: object
+                    properties:
+                      tokens:
+                        type: array
+                        items:
+                          type: string
+        "404":
+          description: "Attempted to retrieve a testing JWT on production."

@@ -1,0 +1,120 @@
+openapi: 3.0.2
+info:
+  title: Muxy's Extension Development Kit
+  version: "1.0"
+  termsOfService: https://muxy.io/terms
+
+  contact:
+    name: MEDKit Support
+    email: support@muxy.io
+
+  description: |
+    # Introduction
+    This document describes Muxy's Extension Development Kit (MEDKit) for
+    building powerful and reliable Twitch extensions.
+
+    Twitch extensions give developers an amazing opportunity to put interactive
+    elements in front of viewers in real-time, but building a backend that can
+    handle millions of requests an hour is not easy.
+
+    Muxy's extension backend has been built to withstand Twitch's viewer load
+    and provide convenient functionality that all extensions may need. It's
+    easy to get started and costs nothing to experiment.
+
+    See the complete dev site at [dev.muxy.io](https://dev.muxy.io) for more
+    information about Muxy and our extensions platform.
+
+    # Authentication
+    MEDKit takes an extension client ID and signed JWT combination as a bearer
+    token with each request. The access level and rights are determined by the
+    user information encoded into the JWTs.
+
+
+  x-logo:
+    url: "https://muxy.io/wp-content/themes/muxy-wp-theme/img/logo.png"
+    altText: MEDKit Logo
+
+servers:
+  - url: https://sandbox.api.muxy.io/v1/e
+    description: Sandbox Development Server
+  - url: https://api.muxy.io/v1/e
+    description: Production Server
+
+tags:
+  - name: Testing
+    description: Endpoints for use in testing extensions
+  - name: Extension State
+    description: Storing and retrieving arbitrary data for viewers
+  - name: Admin Extension State
+    description: Admin-only level state endpoints
+  - name: Accumulate
+    description: |
+      Accumulate allows viewers to send arbitrary data to the server, which may later
+      be accessed by the broadcaster and/or extension admin.
+
+x-tagGroups:
+  - name: General
+    tags:
+      - Testing
+  - name: State Store
+    tags:
+      - Extension State
+      - Admin Extension State
+  - name: Accumulate
+    tags:
+      - Accumulate
+
+components:
+  securitySchemes:
+    viewerJWT:
+      description: Any viewer-level or greater signed JWT
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      x-code-samples:
+        - lang: JavaScript
+          source: |
+            console.log()
+
+    broadcasterJWT:
+      description: A broadcaster-level or greater signed JWT
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+    adminJWT:
+      description: An admin or backend-level signed JWT
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    JWT:
+      type: string
+
+    FakeJWTRequest:
+      type: object
+      properties:
+        extension_id:
+          description: The Extension Client ID provided by Twitch
+          type: string
+        channel_id:
+          description: The Twitch Channel ID the extension is installed and activated one
+          type: string
+        role:
+          description: The access level of the extension user. One of ('viewer', 'broadcaster', 'admin')
+          type: string
+        user_id:
+          description: The Twitch User ID of the user of the extension. May be the same as the Channel ID
+          type: string
+        user_ids:
+          description:
+            One or more Twitch User IDs. If provided, the response will contain an array of
+            tokens, one for each User ID provided.
+          type: string
+
+  responses:
+    UnauthorizedError:
+      description: Access token is missing or invalid
+
+$include: paths.yml

@@ -1,2 +1,2 @@
 ---
-title: Muxy's Extension Development Kit API Docs
+title: Muxy's Extension Development Kit API Docs Purple Nurp

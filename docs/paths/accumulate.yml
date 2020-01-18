@@ -1,0 +1,149 @@
+  ## Accumulate
+  /accumulate:
+    get:
+      tags:
+        - Accumulate
+      security:
+        - broadcasterJWT: []
+
+      summary: Get Accumulation Data
+      description: |
+        Returns a JSON object of accumulated viewer data for a given ID. This is only
+        reachable by a broadcaster or admin signed JWTs.
+
+        If the JWT is signed by a broadcaster, only viewer data for the broadcaster's channel
+        will be returned. An admin-signed JWT will return data for all channels.
+
+        The **start** parameter is required.
+
+        Accumulation data expires after one hour.
+
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: string
+          description: The data set ID to return.
+        - in: query
+          name: start
+          schema:
+            type: string
+          description:
+            A UNIX timestamp in milliseconds representing the earliest viewer data entry
+            to include in the response.
+
+      responses:
+        "200":
+          description: The accumulated viewer data.
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  latest:
+                    type: string
+                    description: |
+                      A UNIX timestamp (in milliseconds) of the most recently received viewer data.
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        observed:
+                          type: integer
+                          description: A UNIX timestamp (in milliseconds) of when this data object was received.
+                        channel_id:
+                          type: string
+                          description: The Twitch ID of the channel on which this data object was received.
+                        opaque_user_id:
+                          type: string
+                          description: The Opaque User ID of the viewer that submitted this data object.
+                        user_id:
+                          type: string
+                          description: The unique user ID of the viewer that submitted this data object (if available).
+                        data:
+                          type: object
+                          additionalProperties: {}
+              example:
+                latest: 1572290039000
+                data:
+                  - observed: 1572290039000
+                    channel_id: 123456
+                    opaque_user_id: O444444
+                    user_id: U444444
+                    data:
+                      choice_selected: "yes"
+                      favorite_color: "blue"
+                  - observed: 1572290032000
+                    channel_id: 123456
+                    opaque_user_id: O555555
+                    user_id: U555555
+                    data:
+                      choice_selected: "yes"
+                      favorite_color: "red"
+
+      x-code-samples:
+        - lang: cURL
+          source: |
+            curl \
+              -X GET \
+              -H "Authorization: <ext id> <jwt>" \
+              https://api.muxy.io/v1/e/accumulate?id=viewer-data&start=1572290039000
+
+        - lang: JavaScript
+          source: |
+            const oneMinuteAgo = (new Date().getTime()) - (1000 * 60);
+            const resp = await sdk.getAccumulation('viewer-data', oneMinuteAgo);
+            console.log(`${resp.data.length}: ${resp.latest}`);
+            console.log(resp.data); // A list of all accumulate values since `oneMinuteAgo`.
+
+    post:
+      tags:
+        - Accumulate
+      security:
+        - viewerJWT: []
+
+      summary: Add Viewer Data to Accumulation
+      description:
+        Sends an accumulation data set to the server for the current viewer/channel combination.
+
+      parameters:
+        - in: query
+          name: id
+          schema:
+            type: string
+          description: The set ID this data belongs to.
+
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: {}
+            example:
+              choice_selected: "yes"
+              favorite_color: "blue"
+
+      responses:
+        "400":
+          description: Invalid JSON data submitted by viewer.
+        "200":
+          description: Viewer data submitted successfully.
+
+      x-code-samples:
+        - lang: cURL
+          source: |
+            curl \
+              -X POST \
+              -H "Authorization: <ext id> <jwt>" \
+              -H "Content-Type: application/json" \
+              -d '{ "choice_selected": "yes", "favorite_color": "blue" }'
+              https://api.muxy.io/v1/e/accumulate?id=viewer-data
+
+        - lang: JavaScript
+          source: |
+            sdk.accumulate('viewer-data', {
+              choice_selected: 'yes',
+              favorite_color: 'blue'
+            });
